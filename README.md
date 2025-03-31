@@ -41,3 +41,22 @@ for your presentation.
 • Also upload a two-minute video (for instance, recorded using Skype where you can screen-
 share) that presents your data and your key findings together with the graph that visually
 explore them. Make sure the video plays in Canvas!
+
+
+
+
+
+Notes from class regarding the midterm project:
+
+
+
+
+
+
+
+
+
+
+
+
+
