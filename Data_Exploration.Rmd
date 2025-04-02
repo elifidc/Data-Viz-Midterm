@@ -4,17 +4,37 @@ output: pdf_document
 date: "2025-04-02"
 ---
 
-#Selecting a dataset
+
+#Packages and Libraries
+```{r}
+library(tidyverse)
+library(ggplot2)
+df <- read_csv("~/Desktop/Data Visualization/freelancer_earnings_bd.csv")
+```
+
+
+
+#Selecting a dataset: Freelance Worker Earning & Job Trends
 
 ```{r}
-install.packages("palmerpenguins")
-library(palmerpenguins)
-data("penguins")
-head(penguins)
-dim(penguins)
-summary(penguins)
-sum(is.na(penguins))
-colSums(is.na(penguins))
+head(df)
+dim(df)
+summary(df)
+sum(is.na(df))
+colSums(is.na(df))
 
 ```
+
+#A chart that shows the distribution of a single categorical variable
+
+
+
+
+
+
+
+
+
+
+
 
