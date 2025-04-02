@@ -4,17 +4,27 @@ output: pdf_document
 date: "2025-04-02"
 ---
 
+#List of Color Codes to Use Throughout Project
+
+Dont forget to add #, had to remove for RMD syntax conflict
+
+74add1
+4575b4
+d73027
+
+
+
 
 #Packages and Libraries
 ```{r}
 library(tidyverse)
 library(ggplot2)
-df <- read_csv("~/Desktop/Data Visualization/freelancer_earnings_bd.csv")
+df <- read_csv("~/Desktop/Data Visualization/Sleep_health_and_lifestyle_dataset.csv")
 ```
 
 
 
-#Selecting a dataset: Freelance Worker Earning & Job Trends
+#Selecting a dataset
 
 ```{r}
 head(df)
@@ -22,10 +32,104 @@ dim(df)
 summary(df)
 sum(is.na(df))
 colSums(is.na(df))
+summary(df[, sapply(df, is.numeric)])
+sapply(df, function(x) length(unique(x)))
+
+colnames(df)
+
 
 ```
 
-#A chart that shows the distribution of a single categorical variable
+#DISTRIBUTION OF A SINGLE CATEGORICAL VARIABLE
+
+
+```{r}
+
+df$`Sleep Disorder` <- factor(df$`Sleep Disorder`, levels = names(sort(table(df$`Sleep Disorder`), decreasing = TRUE)))
+
+
+ggplot(df, aes(x = `Sleep Disorder`)) +
+  geom_bar(fill = "#74add1", color = "black", width = 0.95) +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.3, size = 4.5) +
+  labs(
+    title = "Distribution of Sleep Disorders",
+    x = NULL,
+    y = "Number of Individuals"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(angle = 0, vjust = 0.5, size = 12),
+    axis.title.y = element_text(size = 12, margin = margin(r = 20))
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 240))
+
+```
+
+
+
+
+#DISTRIBUTION OF A SINGLE QUANTITATIVE
+```{r}
+#Experimenting with including levels 0,1,2 in there, although there is no entries with those values. Not sure if I should display that.
+#df$`Quality of Sleep` <- factor(df$`Quality of Sleep`, levels = 1:10)
+
+
+ggplot(df, aes(x = factor(`Quality of Sleep`))) +
+  geom_bar(fill = "#74add1", color = "black", width = 1) +
+  labs(
+    title = "Distribution of Sleep Quality Scores",
+    x = "Score",
+    y = "Count"
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_discrete(expand = c(0, 0)) +
+  theme(
+  plot.title = element_text(hjust = 0.5)
+)
+```
+
+
+
+
+```{r}
+
+ggplot(df, aes(x = Gender, fill = `Sleep Disorder`)) +
+  geom_bar(position = "fill", color = "black", width = 0.7) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(
+    values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")
+  ) +
+  labs(
+    title = "Distribution of Sleep Disorders by Gender",
+    x = "Gender",
+    y = "Proportion",
+    fill = "Sleep Disorder"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    legend.position = "right",
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 11),
+    legend.key.height = unit(1.5, "lines"),
+    legend.spacing.y = unit(0.5, "lines")
+  )
+
+
+```
+
+
+
+
+
+
+
+
+
 
 
 
