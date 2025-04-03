@@ -11,6 +11,8 @@ Dont forget to add #, had to remove for RMD syntax conflict
 74add1
 4575b4
 d73027
+a6cee3 : a lighter version of 74add1 for higher contrast in some scenarios
+
 
 
 
@@ -19,6 +21,10 @@ d73027
 ```{r}
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
+library(scales)
+library(reshape2) 
+library(plotly)
 df <- read_csv("~/Desktop/Data Visualization/Sleep_health_and_lifestyle_dataset.csv")
 ```
 
@@ -38,19 +44,30 @@ sapply(df, function(x) length(unique(x)))
 colnames(df)
 
 
+
 ```
 
 #DISTRIBUTION OF A SINGLE CATEGORICAL VARIABLE
 
 
+## Showing the distribution of sleep disorders in patients in this study
+
+
+Key Question: How are sleep disorders distributed among patients?
+
 ```{r}
-
-df$`Sleep Disorder` <- factor(df$`Sleep Disorder`, levels = names(sort(table(df$`Sleep Disorder`), decreasing = TRUE)))
-
-
-ggplot(df, aes(x = `Sleep Disorder`)) +
-  geom_bar(fill = "#74add1", color = "black", width = 0.95) +
-  geom_text(stat = "count", aes(label = ..count..), vjust = -0.3, size = 4.5) +
+df %>%
+  count(`Sleep Disorder`, name = "n") %>%
+  mutate(Percent = n / sum(n) * 100) %>%
+  ggplot(aes(x = reorder(`Sleep Disorder`, -n), y = n, fill = `Sleep Disorder`)) +
+  geom_bar(stat = "identity", color = "black", width = 0.8, show.legend = FALSE) +
+  geom_text(aes(label = paste0(round(Percent, 1), "%")), 
+            vjust = -0.5, size = 4.5, fontface = "bold") +
+  scale_fill_manual(values = c(
+    "None" = "#a6cee3",
+    "Sleep Apnea" = "#4575b4",
+    "Insomnia" = "#d73027"
+  )) +
   labs(
     title = "Distribution of Sleep Disorders",
     x = NULL,
@@ -59,13 +76,58 @@ ggplot(df, aes(x = `Sleep Disorder`)) +
   theme_minimal(base_size = 14) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
-    axis.text.x = element_text(angle = 0, vjust = 0.5, size = 12),
-    axis.title.y = element_text(size = 12, margin = margin(r = 20))
+    axis.text.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10))
+  )
+
+
+#Keep this graph. 
+#Are colors necessary?
+#Remove
+```
+
+
+
+
+
+
+
+
+
+
+Is this plot wrong in practice? Since the x-axis changed from the last graph. I feel like it is useful but idk. I want to use the bottom graph as one of the graphs extended to another variable (per rubric)
+
+Key Question: How does sleep disorder prevalence vary across BMI categories?
+
+```{r}
+
+plot1 <- df %>%
+  mutate(`BMI Category Grouped` = case_when(
+    `BMI Category` %in% c("Normal", "Normal Weight") ~ "Normal",
+    TRUE ~ `BMI Category`
+  )) %>%
+  count(`BMI Category Grouped`, `Sleep Disorder`) %>%
+  group_by(`BMI Category Grouped`) %>%
+  mutate(Percent = n / sum(n) * 100) %>%
+  ggplot(aes(x = reorder(`BMI Category Grouped`, -n), y = n, fill = `Sleep Disorder`)) +
+  geom_bar(stat = "identity", color = "black", width = 0.8) +
+  scale_fill_manual(values = c("None" = "#a6cee3", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")) +
+  labs(
+    title = "Sleep Disorder by BMI Category (?)",
+    x = "BMI Category",
+    y = "Number of Individuals",
+    fill = "Sleep Disorder"
   ) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 240))
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 11)
+  )
 
-
-
+ggplotly(plot1)
 ```
 
 
@@ -89,24 +151,66 @@ ggplot(df, aes(x = factor(`Quality of Sleep`))) +
   scale_x_discrete(expand = c(0, 0)) +
   theme(
   plot.title = element_text(hjust = 0.5)
-)
+) 
+
+#colnames(df)
+
+
+
+
+
+
+
 ```
 
 
 
 
-```{r}
 
-ggplot(df, aes(x = Gender, fill = `Sleep Disorder`)) +
-  geom_bar(position = "fill", color = "black", width = 0.7) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+
+
+
+
+
+
+
+
+
+
+
+#A chart that shows the distribution of two categorical variables
+
+Does this show the DISTRIBUTION of two? aka gender? or is it just faceted?
+Keep this one?
+
+
+
+Key Question: Are sleep disorders/lack thereof associated with gender?
+```{r}
+#Categorical variable 1: Gender (x-axis)
+#Categorical variable 2: Sleep Disorder (fill color)
+
+
+#EDITS TO MAKE
+#Get rid of some of the y-axis ticks/labels, less nevessary because each chunk is labeled already
+
+
+df %>%
+  count(Gender, `Sleep Disorder`) %>%
+  group_by(Gender) %>%
+  mutate(prop = n / sum(n)) %>%
+  ggplot(aes(x = Gender, y = prop, fill = `Sleep Disorder`)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  geom_text(aes(label = percent(prop, accuracy = 1)),
+            position = position_stack(vjust = 0.5), size = 4.5, color = "white") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
   scale_fill_manual(
     values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")
   ) +
   labs(
     title = "Distribution of Sleep Disorders by Gender",
     x = "Gender",
-    y = "Proportion",
+    y = NULL,
     fill = "Sleep Disorder"
   ) +
   theme_minimal(base_size = 14) +
@@ -121,7 +225,6 @@ ggplot(df, aes(x = Gender, fill = `Sleep Disorder`)) +
     legend.spacing.y = unit(0.5, "lines")
   )
 
-
 ```
 
 
@@ -130,7 +233,9 @@ ggplot(df, aes(x = Gender, fill = `Sleep Disorder`)) +
 
 #A chart that shows the distribution of a quantitative variable across categories of a categorical variable
 
-
+Need to pick one
+Boxplot: More interesting with outliers
+Violin: More interesting with distribution shape. Any way to add outliers here?
 
 ```{r}
 ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorder`)) +
@@ -151,6 +256,20 @@ ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorde
 
 
 
+ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorder`)) +
+  geom_violin(trim = FALSE, color = "black") +
+  labs(
+    title = "Distribution of Sleep Duration by Sleep Disorder",
+    x = "Sleep Disorder",
+    y = "Sleep Duration (hours)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  scale_fill_manual(values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027"))
+
+
+
+
 
 
 ```
@@ -162,9 +281,125 @@ ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorde
 
 ```{r}
 
+#Sleep Duration by Stress Level
+
+
+ggplot(df, aes(x = factor(`Stress Level`), y = `Sleep Duration`)) +
+  geom_boxplot(fill = "#74add1", color = "black") +
+  labs(title = "Sleep Duration by Stress Level", x = "Stress Level", y = "Sleep Duration") +
+  theme_minimal(base_size = 14) +
+    theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    legend.position = "none"
+  )
+
+```
+
+
+
+
+
+
+
+
+One graph not in class
+Maybe get rid of daily steps and other to reduce some of this noise?
+```{r}
+
+num_vars <- df[, c("Sleep Duration", "Stress Level", "Heart Rate", "Physical Activity Level", "Daily Steps")]
+cor_matrix <- round(cor(num_vars, use = "complete.obs"), 2)
+cor_long <- melt(cor_matrix)
+
+
+ggplot(cor_long, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = value), color = "black", size = 4) +
+  scale_fill_gradient2(low = "#b2182b", mid = "white", high = "#2166ac", midpoint = 0, limits = c(-1, 1)) +
+  labs(
+    title = "Correlation Matrix of Sleep & Health Variables",
+    x = NULL, y = NULL, fill = "Correlation"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
+  )
+
+```
+
+
+
+
+
+
+
+
+Plots I made I didn't like/set aside
+
+```{r}
+
+ggplot(df, aes(x = `Sleep Disorder`, y = `Heart Rate`, fill = `Sleep Disorder`)) +
+  geom_boxplot(alpha = 0.7, color = "black") +
+  labs(
+    title = "Heart Rate by Sleep Disorder",
+    x = "Sleep Disorder",
+    y = "Heart Rate (bpm)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "none"
+  )
+
+
+
+
+
+
+
+
+ggplot(df, aes(x = `Physical Activity Level`, y = `Sleep Duration`)) +
+  geom_jitter(color = "steelblue", alpha = 0.7, size = 2) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkred", linetype = "dashed", size = 1) +
+  scale_x_continuous(breaks = seq(20, 100, by = 10)) +
+  scale_y_continuous(breaks = seq(5, 9, by = 1), limits = c(5.5, 9)) +
+  labs(
+    title = "Physical Activity vs. Sleep",
+    x = "Activity Level (minutes/day)",
+    y = "Hours of Sleep"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.line = element_line(color = "black"),
+    axis.ticks = element_line(color = "black"),
+    axis.title.x = element_text(margin = margin(t = 15)), 
+    axis.title.y = element_text(margin = margin(r = 15))   
+  )
+
+
 
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
