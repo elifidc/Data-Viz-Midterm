@@ -126,8 +126,8 @@ fig <- plot_ly(
   x = ~as.factor(`Stress Level`),
   y = ~`Sleep Duration`,
   type = "box",
-  boxpoints = FALSE,  # no default outliers
-  hoverinfo = "skip",  # skip default box hover
+  boxpoints = FALSE,  
+  hoverinfo = "skip",  
   marker = list(
     color = 'rgba(105, 179, 162, 0.5)',
     line = list(color = 'black')
