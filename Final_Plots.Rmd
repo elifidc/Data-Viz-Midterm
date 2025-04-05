@@ -1,0 +1,196 @@
+---
+title: "Final-Plots"
+output: pdf_document
+date: "2025-04-04"
+---
+
+A chart that shows the distribution of a single categorical variable
+
+
+A chart that shows the distribution of a single quantitative variable
+
+
+
+A chart that shows the distribution of two categorical variables
+
+
+
+
+
+
+
+
+#A chart that shows the distribution of a quantitative variable across categories of a categorical variable
+
+### Key Question: Does sleep disorder impact sleep duration?
+
+Variables: Sleep Duration & Sleep Disorder
+
+
+
+
+```{r}
+
+ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorder`)) +
+  geom_boxplot(
+    aes(color = NULL), 
+    color = "black", 
+    outlier.shape = 16, 
+    outlier.size = 2
+  ) +
+  labs(
+    title = "Distribution of Sleep Duration by Sleep Disorder",
+    y = "Hours of Sleep"
+  ) +
+  scale_y_continuous(breaks = seq(5, 9, 0.5)) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title.x = element_blank()
+  ) +
+  scale_fill_manual(values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))  
+
+```
+
+Analysis
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#A chart that shows the relationship between two quantitative variables 
+
+#ALMOST DONE, FINAL CHECK
+
+### Key Question: Does stress level impact sleep duration?
+
+Variables: Sleep Duration & Stress Level
+
+```{r}
+#Sleep Duration by Sleep Level
+
+#Computing medians to use as manual hover info. Cannot disable specific points, so I have to disable all and add manually.
+
+medians <- df %>%
+  group_by(`Stress Level`) %>%
+  summarise(med = median(`Sleep Duration`))
+
+
+# Have to compute outliers manually. Auto option in Plotly is not allowing me to change the color of the outlier points, and they are defaulting to light blue that doesn't work with my graphs. Reference article : https://stackoverflow.com/questions/68332945/the-property-outliercolor-of-python-plotly-graph-objects-box-marker-is-not-worki
+
+outliers <- df %>%
+  group_by(`Stress Level`) %>%
+  mutate(
+    Q1 = quantile(`Sleep Duration`, 0.25),
+    Q3 = quantile(`Sleep Duration`, 0.75),
+    IQR = Q3 - Q1,
+    is_outlier = `Sleep Duration` < (Q1 - 1.5 * IQR) | `Sleep Duration` > (Q3 + 1.5 * IQR)
+  ) %>%
+  filter(is_outlier)
+
+fig <- plot_ly(
+  data = df,
+  x = ~as.factor(`Stress Level`),
+  y = ~`Sleep Duration`,
+  type = "box",
+  boxpoints = FALSE,  # no default outliers
+  hoverinfo = "skip",  # skip default box hover
+  marker = list(
+    color = 'rgba(105, 179, 162, 0.5)',
+    line = list(color = 'black')
+  )
+)
+
+#Outliers continued
+fig <- fig %>%
+  add_trace(
+    data = outliers,
+    x = ~as.factor(`Stress Level`),
+    y = ~`Sleep Duration`,
+    type = "scatter",
+    mode = "markers",
+    marker = list(color = "red", size = 6),
+    hoverinfo = "text",
+    text = ~paste("Outlier:", round(`Sleep Duration`, 2)),
+    showlegend = FALSE
+  )
+
+#Median hover continued
+fig <- fig %>%
+  add_trace(
+    data = medians,
+    x = ~as.factor(`Stress Level`),
+    y = ~med,
+    type = "scatter",
+    mode = "markers",
+    marker = list(color = "black", size = 6),
+    hoverinfo = "text",
+    text = ~paste("Median:", round(med, 2)),
+    showlegend = FALSE
+  ) %>%
+  layout(
+    title = list(
+      text = "Sleep Duration by Stress Level",
+      x = 0.5,
+      font = list(size = 20)
+    ),
+    xaxis = list(title = "Stress Level"),
+    yaxis = list(title = "Hours of Sleep"),
+    margin = list(t = 80)
+  )
+
+fig
+
+```
+Analysis: This plot aims to examine the relationship between an individual's stress level and how long they sleep. There appears to be a moderately strong inverse relationship between stress level and sleep duration. Individuals with lower stress levels appear to sleep longer.
+For example, the median sleep duration for group 3 averages around 8.2 hours. On the other hand, group 8 has the lowest median sleep duration, at 6 hours even. Notably, stress levels 7 and 8 also show the tightest distributions, indicating consistently low sleep duration among individuals with higher stress.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
