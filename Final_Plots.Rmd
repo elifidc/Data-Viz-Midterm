@@ -11,7 +11,70 @@ A chart that shows the distribution of a single quantitative variable
 
 
 
-A chart that shows the distribution of two categorical variables
+
+
+
+
+#A chart that shows the distribution of two categorical variables
+### Key Question: How does the prevalence of sleep disorders vary across BMI categories?
+
+# REVIEW LEGEND AND FINALIZE
+Variables: BMI Category (cleaned) & Sleep Disorder
+
+```{r}
+df <- df %>%
+  mutate(`BMI Category` = case_when(
+    `BMI Category` %in% c("Normal", "Normal Weight") ~ "Normal",
+    TRUE ~ `BMI Category`
+  ))
+
+df$`Sleep Disorder` <- recode(df$`Sleep Disorder`, "None" = "No Sleep Disorder")
+
+df <- df %>%
+  mutate(
+    `BMI Category` = factor(`BMI Category`, levels = c("Normal", "Overweight", "Obese")),
+    `Sleep Disorder` = factor(`Sleep Disorder`, levels = c("No Sleep Disorder", "Sleep Apnea", "Insomnia"))
+  ) 
+
+df_counts <- df %>%
+  count(`BMI Category`, `Sleep Disorder`) %>%
+  complete(`BMI Category`, `Sleep Disorder`, fill = list(n = 0)) %>%
+  group_by(`BMI Category`) %>%
+  mutate(prop = n / sum(n))
+
+
+
+
+
+ ggplot(df_counts, aes(x = `BMI Category`, y = prop, fill = `Sleep Disorder`)) +
+  geom_col(position = "stack", color = "black") +
+  scale_y_continuous(
+    labels = percent_format(),
+    breaks = c(0, 0.5, 1)
+  ) +
+  scale_fill_manual(values = c(
+    "No Sleep Disorder" = "#74add1",
+    "Sleep Apnea" = "#4575b4",
+    "Insomnia" = "#d73027"
+  )) +
+  labs(
+    title = "Proportion of Sleep Disorders by BMI Category",
+    x = NULL,
+    y = NULL,
+    fill = "Sleep Disorder"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.2, face = "bold", size = 16),
+    axis.text.x = element_text(angle = 0, hjust = 0.5, face = "bold"),
+    axis.ticks.y = element_blank(),
+    axis.line.y = element_blank(),
+    legend.position = "right",
+    legend.title = element_blank() 
+  ) 
+
+```
+Analysis: This graph shows the distribution of sleep disorders across BMI categories. Each bar represents a BMI Category group: Normal, Overweight, and Obese. Within each bar, the colors represent either no sleep disorder, sleep apnea, or insomnia. This chart illustrates that individuals with higher BMI are more likely to experience sleep disorders. In contrast, 93% of of individuals with a normal BMI did not report signs of a sleep disorder. The normal BMI group appears to have minimal occurrences of sleep disorder. This distribution indicates as BMI increases, sleep health declines, revealing a negative relationship between the two. 
 
 
 
@@ -24,10 +87,10 @@ A chart that shows the distribution of two categorical variables
 
 ### Key Question: Does sleep disorder impact sleep duration?
 
+# ALMOST DONE, REVIEW AND FINALIZE 
+
+
 Variables: Sleep Duration & Sleep Disorder
-
-
-
 
 ```{r}
 
@@ -46,45 +109,22 @@ ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorde
   theme_minimal(base_size = 14) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
-    axis.title.x = element_blank()
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(face = "bold"),
+    legend.title = element_blank() 
   ) +
-  scale_fill_manual(values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")) +
-  guides(fill = guide_legend(override.aes = list(color = NA)))  
+  scale_fill_manual(values = c(
+    "No Sleep Disorder" = "#74add1", 
+    "Sleep Apnea" = "#4575b4",
+    "Insomnia" = "#d73027"
+  )) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))
 
 ```
 
-Analysis
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Analysis:
+This boxplot compares the distribution of sleep duration across three sleep disorder categories: No sleep disorder, sleep apnea, and insomnia. We are able to see the median, IQR, and potential outliers for each group. For people with no sleep disorder, we can see a relatively tight distribution that appears normal, with a median sleep duration around 7.4 hours. There appears to be one potential outlier right outside of the bottom whisker. The widest distribution appears for those with sleep apnea, with the IQR ranging from ~6.1 to ~8.1 hours, and a median sleep duration of ~6.8. This wide spread distribution suggest inconsistent sleep patterns among those with this sleep disorder.
+Lastly, those with insomnia show the narrowest range of sleep durations, and the lowest median at ~ 6.5 hours of sleep. Most participants with insomnia fall below the generally recommended amount of sleep, but there are also several outliers within this group. This distribution indicates that within the insomnia diagnosis, there can be a range of experiences falling on either extreme.
 
 
 
@@ -93,7 +133,7 @@ Analysis
 
 #A chart that shows the relationship between two quantitative variables 
 
-#ALMOST DONE, FINAL CHECK
+#ALMOST DONE, REVIEW AND FINALIZE
 
 ### Key Question: Does stress level impact sleep duration?
 
@@ -109,7 +149,8 @@ medians <- df %>%
   summarise(med = median(`Sleep Duration`))
 
 
-# Have to compute outliers manually. Auto option in Plotly is not allowing me to change the color of the outlier points, and they are defaulting to light blue that doesn't work with my graphs. Reference article : https://stackoverflow.com/questions/68332945/the-property-outliercolor-of-python-plotly-graph-objects-box-marker-is-not-worki
+# Have to compute outliers manually. Lots of GPT debugging. Auto option in Plotly is not allowing me to change the color of the outlier points, and they are defaulting to light blue that doesn't work with my graphs and I am unable to change it? Reference article : https://stackoverflow.com/questions/68332945/the-property-outliercolor-of-python-plotly-graph-objects-box-marker-is-not-worki
+
 
 outliers <- df %>%
   group_by(`Stress Level`) %>%
@@ -120,6 +161,8 @@ outliers <- df %>%
     is_outlier = `Sleep Duration` < (Q1 - 1.5 * IQR) | `Sleep Duration` > (Q3 + 1.5 * IQR)
   ) %>%
   filter(is_outlier)
+
+
 
 fig <- plot_ly(
   data = df,
@@ -132,10 +175,7 @@ fig <- plot_ly(
     color = 'rgba(105, 179, 162, 0.5)',
     line = list(color = 'black')
   )
-)
-
-#Outliers continued
-fig <- fig %>%
+) %>%
   add_trace(
     data = outliers,
     x = ~as.factor(`Stress Level`),
@@ -146,10 +186,7 @@ fig <- fig %>%
     hoverinfo = "text",
     text = ~paste("Outlier:", round(`Sleep Duration`, 2)),
     showlegend = FALSE
-  )
-
-#Median hover continued
-fig <- fig %>%
+  ) %>%
   add_trace(
     data = medians,
     x = ~as.factor(`Stress Level`),
@@ -176,13 +213,15 @@ fig
 
 ```
 Analysis: This plot aims to examine the relationship between an individual's stress level and how long they sleep. There appears to be a moderately strong inverse relationship between stress level and sleep duration. Individuals with lower stress levels appear to sleep longer.
-For example, the median sleep duration for group 3 averages around 8.2 hours. On the other hand, group 8 has the lowest median sleep duration, at 6 hours even. Notably, stress levels 7 and 8 also show the tightest distributions, indicating consistently low sleep duration among individuals with higher stress.
+For example, the median sleep duration for group 3 averages around 8.2 hours. On the other hand, group 8 has the lowest median sleep duration, at 6 hours even. Notably, stress levels 7 and 8 also show the tightest distributions, indicating consistently low sleep duration among individuals with higher stress. Outliers appear relatively random, but mostly at the higher end of the stress levels.
 
 
 
 
 
+```{r}
 
+```
 
 
 
