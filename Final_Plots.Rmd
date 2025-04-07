@@ -18,6 +18,8 @@ df <- read_csv("~/Desktop/Data Visualization/Sleep_health_and_lifestyle_dataset.
 
 #Data cleaning/grouping necessary for later plots. Errors come up if I leave this in Data_Exploration.rmd file for some reason
 df <- df %>%
+  filter(!is.na(`BMI Category`))
+df <- df %>%
   mutate(`BMI Category` = case_when(
     `BMI Category` %in% c("Normal", "Normal Weight") ~ "Normal",
     TRUE ~ `BMI Category`
@@ -36,6 +38,7 @@ df_counts <- df %>%
   complete(`BMI Category`, `Sleep Disorder`, fill = list(n = 0)) %>%
   group_by(`BMI Category`) %>%
   mutate(prop = n / sum(n))
+
 
 ```
 
@@ -85,14 +88,7 @@ theme(
 scale_y_continuous(expand = expansion(mult = c(0, 0.125)))
 
 ```
-Analysis: This chart examines the prevalence of a sleep disorder within participants. The bars show the proportion of individuals categorized by their sleep disorder/lack thereof. The most common category is no sleep disorder, making up 58.6% of the datas population. Sleep apnea and Insomnia affect roughly the same proportion of individuals, ~21%. While most people report no sleep disorder, there is still a significant minority in the sample who report insomnia or sleep apnea.
-
-
-
-
-
-
-
+Analysis: This chart examines the prevalence of a sleep disorder within participants. The bars show the proportion of individuals categorized by their sleep disorder/lack thereof. The most common category is no sleep disorder, making up 58.6% of the datas population. Sleep apnea and Insomnia affect roughly the same proportion of individuals, ~21%. While most people report no sleep disorder, there is still a significant minority in the sample who report insomnia or sleep apnea, so I wanted to examine these groups deeper later on. 
 
 
 
@@ -226,20 +222,6 @@ The distribution for Insomnia is the most skewed. It is right-skew with a strong
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #A chart that shows the distribution of two categorical variables
 ### Key Question: How does the prevalence of sleep disorders vary across BMI categories?
 Variables: BMI Category (cleaned) & Sleep Disorder
@@ -274,7 +256,7 @@ Variables: BMI Category (cleaned) & Sleep Disorder
   ) 
 
 ```
-Analysis: This graph shows the distribution of sleep disorders across BMI categories. Each bar represents a BMI Category group: Normal, Overweight, and Obese. Within each bar, the colors represent either no sleep disorder, sleep apnea, or insomnia. This chart reveals that individuals with higher BMI are more likely to experience sleep disorders. In contrast, 93% of of individuals with a normal BMI did not report signs of a sleep disorder. The normal BMI group appears to have minimal occurrences of sleep disorder. This chart indicates as BMI increases, sleep health declines, revealing a negative relationship between the two. 
+Analysis: This graph shows the distribution of sleep disorders across BMI categories. Each bar represents a BMI Category group: Normal, Overweight, and Obese. Within each bar, the colors represent either no sleep disorder, sleep apnea, or insomnia. This chart reveals that individuals with higher BMI are more likely to experience sleep disorders. In contrast, 93% of of individuals with a normal BMI did not report signs of a sleep disorder. The normal BMI group appears to have minimal occurrences of sleep disorder. This chart indicates as BMI increases, sleep health declines, revealing a negative relationship between the two. For this graph, I had to group the BMI categories "Normal" and "Normal Weight". I am assuming this is due to differences in the data collection process. 
 
 
 
@@ -287,7 +269,6 @@ Analysis: This graph shows the distribution of sleep disorders across BMI catego
 
 
 ```{r}
-
 
 df_counts_gender <- df %>%
   count(Gender, `BMI Category`, `Sleep Disorder`) %>%
@@ -320,7 +301,7 @@ ggplot(df_counts_gender, aes(x = `BMI Category`, y = prop, fill = `Sleep Disorde
 
 
 ```
-Analysis: When you examine sleep disorders by both gender and BMI category, the results look somewhat messy at first. Upon closer look, a rough pattern seems to emerge. It appears that overweight/obese women are more likely to suffer from sleep apnea. On the other hand, overweight/obese men appear to suffer from more insomnia, with some notable sleep apnea as well. In both categories, the normal BMI group shows minimal occurences of sleep disorders. These occurences are much more prominent in the overweight and obese BMI categories.
+Analysis: When you examine sleep disorders by both gender and BMI category, the results look somewhat messy at first. Upon closer look, a rough pattern seems to emerge. It appears that overweight/obese women are more likely to suffer from sleep apnea. On the other hand, overweight/obese men appear to suffer from more insomnia, with some notable sleep apnea as well. In both categories, the normal BMI group shows minimal occurences of sleep disorders. A majority of both normal bars consist of no sleep disorder. These occurrences are much more prominent in the overweight and obese BMI categories.
 
 
 
@@ -357,51 +338,41 @@ ggplot(df, aes(x = `Stress Level`, y = `Sleep Duration`, color = `Sleep Disorder
   scale_x_continuous(breaks = seq(1, 10, by = 1)) +
   scale_y_continuous(breaks = seq(5, 10, by = 0.5)) +
   scale_color_manual(values = c("No Sleep Disorder" = "#74add1",  
-                                "Sleep Apnea" = "#4575b4",       
-                                "Insomnia" = "#d73027"))         
+                                "Sleep Apnea" = "#3a5fcd",       
+                                "Insomnia" = "#d73027")) +
+   guides(color = guide_legend(override.aes = list(size = 4.5)))
+
 
 
 
 
 ```
-Analysis: This scatter plot examines the relationship between the sleep duration and the stress level of an individual, with the colors representing the prevalence of a sleep disorder. The graph reveals a moderately strong negative relationship between stress level and sleep duration, across sleep disorders/lack of It appears that the higher the stress level of an individual, the lower the duration of sleep. This trend is especially noticeable in insomnia, with data points tightly grouped and declining more rapidly. Individuals with lower levels of stress, 1-2, report longer hours of sleep, averaging between 7.5-8.5 hours of sleep. On the other hand of the graph, we see that the individuals with stress levels 5-6 report significantly less sleep, 6-6.5 hours on average. Sleep apnea is falling on either side of these extremes, with most points clustered at either low stress, or low sleep duration, mirroring the trend we saw earlier.
+Analysis: This scatter plot examines the relationship between the sleep duration and the stress level of an individual, with the colors representing the prevalence of a sleep disorder. The graph reveals a moderately strong negative relationship between stress level and sleep duration, across sleep disorders/lack of It appears that the higher the stress level of an individual, the lower the duration of sleep. This trend is especially noticeable in insomnia, with data points tightly grouped and declining more rapidly. Individuals with lower levels of stress report longer hours of sleep, averaging between 7.5-8.5 hours of sleep. On the other hand of the graph, we see that the individuals with stress levels report significantly less sleep, 6-6.5 hours on average. Sleep apnea is falling on either side of these extremes, with most points clustered at either low stress, or low sleep duration, mirroring the trend we saw earlier.
 The graph shows that data is heavily clustered at stress levels, but this is due to stress level being measured discretely. The graph shows variation across stress levels, but overall shows that higher levels of stress lead to lower sleep durations, on average.
-
-
-#A chart that shows the relationship between two quantitative variables (Alternate)
-
-```{r}
-ggplot(df, aes(x = `Stress Level`, y = `Sleep Duration`, color = `Quality of Sleep`)) +
-  geom_jitter(alpha = 0.6, size = 2) +
-  scale_color_viridis_c() +
-  labs(
-    title = "Stress Level vs Sleep Duration",
-    x = "Stress Level",
-    y = "Sleep Duration (Hours)",
-    color = "Sleep Quality"
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
-    plot.subtitle = element_text(size = 12, hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    legend.title = element_text(face = "bold")
-  )
-```
-
-
 
 
 
 
 # A chart type we have not discussed in class
-Lots of debugging with GPT here. Had a hard time structuring the hierarchy needed.
+Lots of debugging with GPT here. Struggled a lot with this and specifically had a hard time structuring the hierarchy needed for the plot, as well as the color scheme.
+
+
 
 
 ```{r}
 
-
+#new df for sun burst plot
 sun_burst <- df %>%
+  count(Gender, `Sleep Disorder`, `BMI Category`) %>%
+  mutate(
+    ids = paste(Gender, `Sleep Disorder`, `BMI Category`, sep = " - "),
+    labels = `BMI Category`,
+    parents = paste(Gender, `Sleep Disorder`, sep = " - "),
+    value = n
+  )
+
+# Middle layer, connecting sleep disorder and gender
+middle_layer <- df %>%
   count(Gender, `Sleep Disorder`) %>%
   mutate(
     ids = paste(Gender, `Sleep Disorder`, sep = " - "),
@@ -410,6 +381,7 @@ sun_burst <- df %>%
     value = n
   )
 
+# "Root" layer
 gender_nodes <- df %>%
   count(Gender) %>%
   mutate(
@@ -419,8 +391,21 @@ gender_nodes <- df %>%
     value = n
   )
 
-sun_burst_all <- bind_rows(gender_nodes, sun_burst)
+# Combiningg all layers
+sun_burst_master_df <- bind_rows(gender_nodes, middle_layer, sun_burst)
 
+
+#Fixing color scheme with GPT
+sun_burst_master_df <- sun_burst_master_df %>%
+  mutate(color = case_when(
+    ids == "Female" ~ "#d73027",        
+    ids == "Male" ~ "#4575b4",          
+    grepl("^Female", parents) ~ "#f99da5",  
+    grepl("^Male", parents) ~ "#8db3dd",    
+    TRUE ~ "#cccccc"
+  ))
+
+#finally plotting
 plot_ly(
   data = sun_burst_all,
   labels = ~labels,
@@ -430,25 +415,24 @@ plot_ly(
   type = 'sunburst',
   branchvalues = 'total',
   hoverinfo = 'label+value+percent parent',
-  textfont = list(size = 16, color = "#ffffff")  
+  marker = list(colors = sun_burst_all$color),
+  textfont = list(size = 14, color = "#ffffff")
 ) %>%
   layout(
     title = list(
-      text = "<b>Distribution of Sleep Disorders by Gender</b>",
-      font = list(size = 22, family = "Arial", color = "black"),
+      text = "<b>Composition of Sleep Disorders by Gender and BMI</b>",
+      font = list(size = 20, family = "Arial", color = "black"),
       x = 0.5,
       y = 0.95,
       xanchor = "center",
       yanchor = "top"
     ),
-    margin = list(t = 100), 
-    sunburstcolorway = c("#4575b4", "#d73027") 
+    margin = list(t = 100)
   )
+
 ```
 
-
-
-
+Using this graph, we can dynamically explore the composition of gender, sleep disorders, and BMI. We can interact with the graph to display the proportion of sleep disorders in each gender, and then further break it down into the composition of sleep BMIs within each gender's sleeping disorder. Previously, we saw that most overweight/obese BMI participants had a type of sleeping disorder. Here, we have flipped the script and can see that most (male) insomnia patients are either overweight or obese, with a small chunk having a normal BMI. The structure of the hierarchies in this graph helped reinforce the trends seen earlier, but from a different perspective.
 
 
 
