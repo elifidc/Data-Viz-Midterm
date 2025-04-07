@@ -4,6 +4,11 @@ output: pdf_document
 date: "2025-04-02"
 ---
 
+#NOTE:
+This file contains many and multiple rough drafts of plots, as well as plots that did not make it on to my report/presentation.
+
+
+
 #List of Color Codes to Use Throughout Project
 
 Dont forget to add #, had to remove for RMD syntax conflict
@@ -14,6 +19,54 @@ d73027
 a6cee3 : a lighter version of 74add1 for higher contrast in some scenarios
 
 
+
+Code for manual color fill
+
+```{r}
+
+#scale_fill_manual(
+ #   name = NULL,  
+  #  values = c(
+   #   "No Sleep Disorder" = "#a6cee3",
+    #  "Sleep Apnea" = "#4575b4",
+     # "Insomnia" = "#d73027"
+   # ) 
+```
+
+
+Code for titles/axes and other reusable chunks
+
+```{r}
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    legend.title = element_text(face = "bold")
+  )
+
+
+
+
+theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    legend.position = "right",
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 11),
+    legend.key.height = unit(1.5, "lines"),
+    legend.spacing.y = unit(0.5, "lines")
+  )
+
+
+
+
+panel.grid.minor = element_blank() +scale_x_continuous(breaks = seq(5.5, 8.5, by = 0.5))
+
+
+legend.position = "none"
+
+```
 
 
 
@@ -42,6 +95,7 @@ summary(df[, sapply(df, is.numeric)])
 sapply(df, function(x) length(unique(x)))
 
 colnames(df)
+
 
 
 
@@ -81,84 +135,92 @@ df %>%
   )
 
 
-#Keep this graph. 
-#Are colors necessary?
-#Remove
-```
 
 
 
 
-
-
-
-
-
-
-Is this plot wrong in practice? Since the x-axis changed from the last graph. I feel like it is useful but idk. I want to use the bottom graph as one of the graphs extended to another variable (per rubric)
-
-Key Question: How does sleep disorder prevalence vary across BMI categories?
-
-```{r}
-
-plot1 <- df %>%
-  mutate(`BMI Category Grouped` = case_when(
-    `BMI Category` %in% c("Normal", "Normal Weight") ~ "Normal",
-    TRUE ~ `BMI Category`
-  )) %>%
-  count(`BMI Category Grouped`, `Sleep Disorder`) %>%
-  group_by(`BMI Category Grouped`) %>%
+df %>%
+  mutate(Gender = factor(Gender, levels = c("Male", "Female"))) %>%  
+  count(Gender, `Sleep Disorder`, name = "n") %>%
+  group_by(`Sleep Disorder`) %>%
   mutate(Percent = n / sum(n) * 100) %>%
-  ggplot(aes(x = reorder(`BMI Category Grouped`, -n), y = n, fill = `Sleep Disorder`)) +
-  geom_bar(stat = "identity", color = "black", width = 0.8) +
-  scale_fill_manual(values = c("None" = "#a6cee3", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")) +
-  labs(
-    title = "Sleep Disorder by BMI Category (?)",
-    x = "BMI Category",
-    y = "Number of Individuals",
-    fill = "Sleep Disorder"
+  ggplot(aes(x = `Sleep Disorder`, y = n, fill = Gender)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9),
+           width = 0.7, color = "black") +
+  geom_text(
+    aes(label = paste0(round(Percent, 1), "%")),
+    position = position_dodge(width = 0.9),
+    vjust = -0.6,
+    size = 4.5,
+    fontface = "bold"
   ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
-    axis.text.x = element_text(size = 12),
-    axis.title = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 11)
-  )
+  scale_fill_manual(values = c("Male" = "#4575b4", "Female" = "#d73027")) +
+  labs(
+    title = "Distribution of Sleep Disorders by Gender",
+    x = "Sleep Disorder",
+    y = NULL,
+    fill = "Gender"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+theme_minimal(base_size = 14) +
+theme(
+  plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank(),     
+  axis.text.y = element_blank(),
+  axis.ticks.y = element_blank(),
+  panel.grid.major.y = element_blank()
+)
 
-ggplotly(plot1)
+
+
 ```
+
+
+
+
 
 
 
 
 #DISTRIBUTION OF A SINGLE QUANTITATIVE
 ```{r}
-#Experimenting with including levels 0,1,2 in there, although there is no entries with those values. Not sure if I should display that.
-#df$`Quality of Sleep` <- factor(df$`Quality of Sleep`, levels = 1:10)
 
 
-ggplot(df, aes(x = factor(`Quality of Sleep`))) +
-  geom_bar(fill = "#74add1", color = "black", width = 1) +
+ggplot(df, aes(x = `Sleep Duration`)) +
+  geom_histogram(binwidth = 0.2, fill = "#74add1", color = "black", alpha = 0.7) +
   labs(
-    title = "Distribution of Sleep Quality Scores",
-    x = "Score",
-    y = "Count"
+    title = "Distribution of Sleep Duration",
+    x = "Hours of Sleep",
+    y = "Number of Participants"
   ) +
   theme_minimal(base_size = 14) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_x_discrete(expand = c(0, 0)) +
   theme(
-  plot.title = element_text(hjust = 0.5)
-) 
-
-#colnames(df)
+    plot.title = element_text(hjust = 0.5)
+  )
 
 
+  
+  
+  
+ggplot(df, aes(x = `Sleep Duration`)) +
+  geom_density(fill = "#74add1", color = "#2b83ba", alpha = 0.8, size = 1.4, adjust = 1) +
+  labs(
+    title = "Sleep Duration Among Participants",
+    x = "Hours of Sleep",
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.title.x = element_text(margin = margin(t = 10))
+  )
 
 
 
+
+```
 
 
 ```
@@ -193,6 +255,7 @@ Key Question: Are sleep disorders/lack thereof associated with gender?
 
 #EDITS TO MAKE
 #Get rid of some of the y-axis ticks/labels, less nevessary because each chunk is labeled already
+#Add sample size for male vs female?
 
 
 df %>%
@@ -237,36 +300,31 @@ Need to pick one
 Boxplot: More interesting with outliers
 Violin: More interesting with distribution shape. Any way to add outliers here?
 
+Split by gender/bmi/etc
+
 ```{r}
+
+
+
 ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorder`)) +
-  geom_boxplot(color = "black", width = 0.6, outlier.shape = 21, outlier.fill = "black", outlier.size = 2) +
-  scale_fill_manual(values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")) +
+  geom_boxplot(
+    aes(color = NULL), 
+    color = "black", 
+    outlier.shape = 16, 
+    outlier.size = 2
+  ) +
   labs(
     title = "Distribution of Sleep Duration by Sleep Disorder",
-    x = "Sleep Disorder",
-    y = "Sleep Duration (hours)"
+    y = "Hours of Sleep"
   ) +
+  scale_y_continuous(breaks = seq(5, 9, 0.5)) +
   theme_minimal(base_size = 14) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
-    axis.text.x = element_text(size = 12),
-    axis.title = element_text(size = 12),
-    legend.position = "none"
-  )
-
-
-
-ggplot(df, aes(x = `Sleep Disorder`, y = `Sleep Duration`, fill = `Sleep Disorder`)) +
-  geom_violin(trim = FALSE, color = "black") +
-  labs(
-    title = "Distribution of Sleep Duration by Sleep Disorder",
-    x = "Sleep Disorder",
-    y = "Sleep Duration (hours)"
+    axis.title.x = element_blank()
   ) +
-  theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
-  scale_fill_manual(values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027"))
-
+  scale_fill_manual(values = c("None" = "#74add1", "Sleep Apnea" = "#4575b4", "Insomnia" = "#d73027")) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))  
 
 
 
@@ -327,6 +385,7 @@ ggplot(cor_long, aes(x = Var1, y = Var2, fill = value)) +
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
   )
 
+
 ```
 
 
@@ -354,32 +413,42 @@ ggplot(df, aes(x = `Sleep Disorder`, y = `Heart Rate`, fill = `Sleep Disorder`))
   )
 
 
+  
+  ggplot(df, aes(x = `Stress Level`, y = `Sleep Duration`)) +
+  geom_point(alpha = 0.6, color = "lightblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  labs(title = "Stress Level vs Sleep Duration",
+       x = "Stress Level", y = "Sleep Duration (Hours)") +
+  theme_minimal()
 
 
-
-
-
-
-ggplot(df, aes(x = `Physical Activity Level`, y = `Sleep Duration`)) +
-  geom_jitter(color = "steelblue", alpha = 0.7, size = 2) +
-  geom_smooth(method = "lm", se = FALSE, color = "darkred", linetype = "dashed", size = 1) +
-  scale_x_continuous(breaks = seq(20, 100, by = 10)) +
-  scale_y_continuous(breaks = seq(5, 9, by = 1), limits = c(5.5, 9)) +
-  labs(
-    title = "Physical Activity vs. Sleep",
-    x = "Activity Level (minutes/day)",
-    y = "Hours of Sleep"
+ggplot(df, aes(x = `Sleep Duration`, fill = `Sleep Disorder`)) +
+  geom_histogram(position = "identity", alpha = 0.9, binwidth = 0.25, color = "white") +
+  scale_fill_manual(
+    name = NULL,  
+    values = c(
+      "No Sleep Disorder" = "#a6cee3",
+      "Sleep Apnea" = "#4575b4",
+      "Insomnia" = "#d73027"
+    )
   ) +
-  theme_classic(base_size = 14) +
+  labs(
+    title = "Sleep Duration by Sleep Disorder",
+    x = "Sleep Duration (Hours)",
+    y = "Number of Individuals"
+  ) +
+  theme_minimal(base_size = 13) +
   theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
-    axis.title = element_text(size = 12),
-    axis.line = element_line(color = "black"),
-    axis.ticks = element_line(color = "black"),
-    axis.title.x = element_text(margin = margin(t = 15)), 
-    axis.title.y = element_text(margin = margin(r = 15))   
-  )
-
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold", margin = margin(r = 10)),
+    legend.position = "top",
+    legend.justification = "center",
+    legend.text = element_text(size = 11),
+    legend.box.margin = margin(b =5),
+    plot.margin = margin(t = 10, r = 20, b = 10, l = 20),
+    panel.grid.minor = element_blank() +scale_x_continuous(breaks = seq(5.5, 8.5, by = 0.5))
+  ) 
 
 
 
@@ -395,12 +464,94 @@ ggplot(df, aes(x = `Physical Activity Level`, y = `Sleep Duration`)) +
 
 
 
+Mess up kinda?
+
+### Key Question: Does stress level impact sleep duration?
+
+Variables: Sleep Duration & Stress Level
+```{r}
+#Sleep Duration by Sleep Level
+
+#Computing medians to use as manual hover info. Cannot disable specific points, so I have to disable all and add manually.
+
+medians <- df %>%
+  group_by(`Stress Level`) %>%
+  summarise(med = median(`Sleep Duration`))
+
+
+# Have to compute outliers manually. Lots of GPT debugging. Auto option in Plotly is not allowing me to change the color of the outlier points, and they are defaulting to light blue that doesn't work with my graphs and I am unable to change it? Reference article : https://stackoverflow.com/questions/68332945/the-property-outliercolor-of-python-plotly-graph-objects-box-marker-is-not-worki
+
+
+outliers <- df %>%
+  group_by(`Stress Level`) %>%
+  mutate(
+    Q1 = quantile(`Sleep Duration`, 0.25),
+    Q3 = quantile(`Sleep Duration`, 0.75),
+    IQR = Q3 - Q1,
+    is_outlier = `Sleep Duration` < (Q1 - 1.5 * IQR) | `Sleep Duration` > (Q3 + 1.5 * IQR)
+  ) %>%
+  filter(is_outlier)
+  
+df$`Stress Level` <- factor(df$`Stress Level`, ordered = TRUE, levels = 1:8)
+
+
+
+fig <- plot_ly(
+  data = df,
+  x = ~as.factor(`Stress Level`),
+  y = ~`Sleep Duration`,
+  type = "box",
+  boxpoints = FALSE,  
+  hoverinfo = "skip",  
+  marker = list(
+    color = 'rgba(105, 179, 162, 0.5)',
+    line = list(color = 'black')
+  )
+) %>%
+  add_trace(
+    data = outliers,
+    x = ~as.factor(`Stress Level`),
+    y = ~`Sleep Duration`,
+    type = "scatter",
+    mode = "markers",
+    marker = list(color = "red", size = 6),
+    hoverinfo = "text",
+    text = ~paste("Outlier:", round(`Sleep Duration`, 2)),
+    showlegend = FALSE
+  ) %>%
+  add_trace(
+    data = medians,
+    x = ~as.factor(`Stress Level`),
+    y = ~med,
+    type = "scatter",
+    mode = "markers",
+    marker = list(color = "black", size = 6),
+    hoverinfo = "text",
+    text = ~paste("Median:", round(med, 2)),
+    showlegend = FALSE
+  ) %>%
+  layout(
+    title = list(
+      text = "Sleep Duration by Stress Level",
+      x = 0.5,
+      font = list(size = 20)
+    ),
+    xaxis = list(title = "Stress Level"),
+    yaxis = list(title = "Hours of Sleep"),
+    margin = list(t = 80)
+  )
+
+fig
 
 
 
 
 
+```
 
+
+Analysis: This plot aims to examine the relationship between an individual's stress level and how long they sleep. There appears to be a moderately strong inverse relationship between stress level and sleep duration. Individuals with lower stress levels appear to sleep longer.
+For example, the median sleep duration for group 3 averages around 8.2 hours. On the other hand, group 8 has the lowest median sleep duration, at 6 hours even. Notably, stress levels 7 and 8 also show the tightest distributions, indicating consistently low sleep duration among individuals with higher stress. Outliers appear relatively random, but mostly at the higher end of the stress levels.
 
 
 
